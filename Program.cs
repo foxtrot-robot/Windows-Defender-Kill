@@ -121,6 +121,22 @@ namespace Disable_Windows_Defender
             };
             proc.Start();
         }
+        public static void RunCMD(string command)
+        {
+            var proc = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = @"C:\Windows\System32\cmd.exe",
+                    Arguments = "/c " + command,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true,
+                    WorkingDirectory = @"C:\"
+                }
+            };
+            proc.Start();
+        }
 
     }
 }
