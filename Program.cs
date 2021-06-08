@@ -54,6 +54,7 @@ namespace Disable_Windows_Defender
                     CreateNoWindow = true
                 }
             };
+            proc.Start();
             string line = proc.StandardOutput.ReadLine();
             while (!proc.StandardOutput.EndOfStream)
             {
